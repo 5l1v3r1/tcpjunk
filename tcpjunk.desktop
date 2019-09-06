@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=tcpjunk
+Type=Application
+GenericName=TCP protocol tester
+Comment=TCP protocols testing tool
+Icon=tcpjunk
+Exec=tcpjunk -x
+Terminal=false
+Categories=Network;

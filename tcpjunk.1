@@ -1,0 +1,283 @@
+.\" Modified: oferkv@gmail.com
+.TH TCPJUNK 1 "September 2010" "Tcpjunk" "Tcpjunk"
+
+.SH NAME
+Tcpjunk \- TCP protocols testing tool.
+
+.SH SYNOPSIS
+tcpjunk \-s [hostname] \-p [port] \-c [session file] [options]
+.P
+tcpjunk \-r \-p [port] \-c [session file] [options]
+.P
+tcpjunk \-x
+
+.SH DESCRIPTION
+Tcpjunk is a TCP protocols testing and hacking utility. 
+.br
+Tcpjunk can be used as an IPv4 or IPv6 client or server and uses a predefined session file containing 
+the data to send.
+Tcpjunk can be used as a general testing tool, a traffic generator or a fuzzer,
+for protocols such as HTTP, SMTP, etc.
+
+Tcpjunk has 3 modes of operation: concurrent client, concurrent server and in GUI mode - iterative client and server.
+
+.SH OPTIONS
+.IP ""
+.SS General options:
+.IP "" 4
+
+.SS \-d 
+.SS \--debug
+Force display of raw traffic when using multiple instances or in server mode.
+
+.SS \-X 
+.SS \--hexdump
+Display raw traffic as hexdump.
+
+.SS \-v 
+.SS \--verbose
+Display warnings and other information.
+
+.SS \-h 
+.SS \--help
+Show help and exit.
+
+.SS \-x 
+.SS \--gui
+Run Tcpjunk in GUI mode, allowing a single client or server testing environment (all other flags are ignored).
+
+.SS \-a 
+.SS \--daemon
+Run Tcpjunk as a daemon. 
+     
+.SS Session options:
+.IP ""
+.SS \-c
+.SS \--file=FILENAME
+specifies a session file name, containing the data to send.
+.br
+A session file can contain any text or binary data.
+Tcpjunk tags can be inserted to session files to create dynamic content and to control send and receive operations.
+See Tags section for more information.
+
+.SS \-e
+.SS \--seq-file=DIRECTORY
+With each connection, use a session file from the specified directory sequentially. 
+
+.SS \-f
+.SS \--rand-file=DIRECTORY
+With each connection, use a random session file from the specified directory.
+
+.SS -W 
+.SS --wait-data
+After connection is established, wait for remote host to send data first, before sending any replies (default: send data immediately).
+     
+.SS -C
+.SS --close
+When no data is left to send, do not wait for remote host to send a reply (default: wait for reply).
+
+.SS -T
+.SS --sess-time=MSECONDS
+Session timeout (default: 100 milliseconds).
+.br
+Tcpjunk uses this value to determine when to finish waiting for remote host to send data.
+This timeout is triggered when no data arrives from the remote host and when it expires, Tcpjust will continue with its next task.
+This option greatly affects session speed and should be set according to connection latency and tested protocol.
+     
+.SS Client options:
+.IP ""
+.SS -s
+.SS --host=HOST/IP
+Hostname or IP address of remote host.
+
+.SS -i
+.SS --instances=NUMBER
+Number of Tcpjunk client instances to run in parallel continuously.
+
+.SS -l
+.SS --limit-sess=NUMBER
+Limit the number of sessions for each client instance (default: unlimited).
+.br
+If specified, each Tcpjunk client instance will terminate after performing this many sessions.
+
+.SS -P
+.SS --src-ip=IP
+Use a specific or random source IP address for client connections.
+.br
+Tcpjunk adds these IP addresses automatically on aliases of a network interface specified with -I.
+Use the format 192.x.4.x for IPv4 and 2001:x:x:x:0:0:0:1 for IPv6, Tcpjunk replaces every 'x'
+with a random octet/quad.
+
+.SS -I
+.SS --interface=INTERFACE
+Interface to use when using the -P option.
+.br
+IP forwarding must be enabled on a host running Tcpjunk, if this interface does not lead directly to the destination address.
+This option needs root privileges.
+
+.SS -N
+.SS --ip-sessions=NUMBER
+Number of connections to use each source IP address before changing to a different one (default: 10)
+  
+.SS -O
+.SS --offset=NUMBER
+Starting alias offset when using the -I option with IPv4 (default: 0).
+.br
+When using multiple instances (-i) with different source IPv4 addresses, each Tcpjunk child process uses its own alias.
+Another main Tcpjunk processes, must use this option to have their own aliases.
+
+.SS -o
+.SS --src-port=PORT
+Bind client connections to a specific source port.
+
+.SS Server options:
+.IP ""
+.SS -r 
+.SS --server
+Run TCPJunk in server mode.
+.br
+Tcpjunk will listen to connections on the port specified with -p.
+A Tcpjunk server can handle multiple connections simultaneously, but is not efficient as servers dedicated to specific protocols.
+Use -v and/or -d options, to view warnings or incoming connections data.
+  
+.SS -E
+.SS --cert=FILENAME
+SSL server certificate filename
+     
+.SS -K
+.SS --key=FILENAME
+SSL server key filename
+
+.SS Connection options:
+.IP ""
+.SS -p
+.SS --port=PORT
+TCP port or service name to connect / listen to.
+
+.SS -6
+.SS --ipv6
+Connect and Accept using IPv6. 
+
+.SS -S 
+.SS --ssl
+Use SSL (v3.0) to send data in all TCP connections.
+
+.br 
+Example for generating a private key and self signed SSL certificate:
+.br 
+$ openssl genrsa -des3 -out server.key 1024
+.br 
+$ openssl req -new -key server.key -out server.csr
+.br
+$ cp server.key server.key.org
+.br 
+$ openssl rsa -in server.key.org -out server.key
+.br 
+$ openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt 
+
+.SS -t
+.SS --timeout=SECONDS
+Connection establishment timeout (default: 2 seconds)
+
+.SS -w
+.SS --wait=MSESONDS
+Create a delay between connections when using multiple instances (default: none).
+     
+.SS -k
+.SS --repeat-sess=NUMBER
+Repeat session on the same connection without reconnecting (default: 1)
+     
+.SS -m
+.SS --send-size=BYTES
+Set buffer size for send calls (when setting this option, TCP_NODELAY socket option is enabled).
+  
+.SS -D
+.SS --send-delay=MSECONDS
+If -m is used, wait this much between send calls.
+
+.SS -z 
+.SS --optimize
+Enables tw_recycle and tw_reuse TCP settings and sets file descriptor limits to 10240.
+This option needs root privileges.
+
+.SH SESSION FILE TAGS
+.IP ""
+.SS <sect>[data]</sect>
+Section tag, delimiters for multiple sections in the session flow.
+.br
+When this tag is not used, Tcpjunk sends all data in the session file in one send operation.
+.br
+If data is entered between <sect> tags, Tcpjunk sends each section by itself, and expect a reply from the remote host before sending the next section, for example: 
+    <sect>user root
+    </sect>
+    <sect>pass toor
+    </sect>
+ 
+.SS <rep [min] [max]>[data]</rep>
+Repeat tag, repeat [data], for times specified by the [min] setting.
+.br
+If [max] is specified, repeats a random number of times, in the range of [min]-[max].
+Repeat tags can be nested inside other repeat tags, for example:
+    <rep 10>Outer1 <rep 1 5>Nested</rep>Outer2 </rep>
+ 
+.SS <sys>[command]<sys>
+System tag, inserts the output of a system command into the session.
+ 
+.SS <fuzz [type|last] [min] [max]>
+Fuzz tag, inserts a buffer of data of the specified type, in the size of [min] bytes.
+.br
+If [max] is specified, insert a randomly sized buffer, in the range of [min]-[max].
+Use <fuzz last> to repeat last tag output later in a session.
+
+Fuzzing types:
+ digit    [0-9]
+ alnum    [0-9][a-z][A-Z]
+ alpha    [a-z][A-Z]
+ cntrl    control characters
+ print    any printable character
+ special  above ASCII 127
+ punct    punctuation characters
+ space    space characters
+ any      any character
+ random   random fuzzing type for each instance
+
+.SS <tamp [type] [min] [max]>[data]</tamp>
+Tamper tag, tampers with enclosed data by replacing random characters with ones of the specified type (types are the same as in the fuzz tag).
+.br
+Percentage of tampering is determined by the [min] value (1-100).
+.br
+If [max] is specified, in each connection a random tampering percentage is chosen. 
+
+.SS <char [hex code] [max]>
+Char tag, inserts a specific character, specified by [hex code].
+Only a single byte is inserted, unless [max] is specified.
+
+.SS <enc [prefix] [type] [postfix] [padding]>[data]</enc>
+Encode tag, encode characters using the following encoding types: dec, hex, HEX or oct.
+prefix and postfix must be specified, or 'none'.
+Padding adds leading zeroes to each encoded character.
+
+HTML encoding example: <enc &# dec none 4>test</enc>
+Produces: &#0116&#0101&#0115&#0116
+ 
+.SS <count [dec|hex|last] [min] [max]>
+Count tag, counts from min to max, in decimal or hexadecimal.
+.br
+The [min] and [max] values must be specified in decimal.
+Use <count last> to repeat last count output.
+
+.SS <charr>[oct, oct,...]</carr>
+Character Array tag, inserts an array of characters, useful in cases when large amount of binary data is used.
+
+.SS <inst>
+Instance tag, inserts the number of the current Tcpjunk instance.
+.br
+In client mode, this tag inserts the same number for all connections a specific instance creates.
+In server mode, this tag inserts the number of the current server instance (always increments).
+ 
+.SH AUTHOR
+Written by Ofer Kashayov <oferkv@gmail.com>.
+
+.SH COPYRIGHT
+Copyright (c) 2008 \- 2010  Ofer Kashayov
+
